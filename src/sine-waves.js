@@ -26,8 +26,9 @@ function SineWaves(options) {
   // Do we have any waves
   this.waves = this.options.waves;
   delete this.options.waves;
-  if (!this.waves || !this.waves.length) {
-    throw 'No waves specified';
+  if (!this.waves || !Utilities.isType(this.waves, 'array') || !this.waves.length) {
+    this.waves = [];
+    console.warn('No waves specified');
   }
 
   // DPI
@@ -65,6 +66,7 @@ function SineWaves(options) {
  */
 SineWaves.prototype.options = {
   speed: 10,
+  accerate: 1,
   rotate: 0,
   ease: 'Linear',
   wavesWidth: '95%'
@@ -95,21 +97,6 @@ SineWaves.prototype.setupUserFunctions = function() {
   if (Utilities.isFunction(this.options.initialize)) {
     this.options.initialize.call(this);
   }
-};
-
-/**
- * Defaults for each line created
- *
- * @type {Object}
- */
-var defaultWave = {
-  timeModifier: 1,
-  amplitude: 50,
-  wavelength: 50,
-  segmentLength: 10,
-  lineWidth: 1,
-  strokeStyle: 'rgba(255, 255, 255, 0.2)',
-  type: 'Sine'
 };
 
 /**
@@ -156,6 +143,37 @@ SineWaves.prototype.getDimension = function(dimension) {
   } else if (dimension === 'height') {
     return this.el.clientHeight;
   }
+};
+
+/**
+ * Get fillStyle of each wave from a string or function
+ *
+ * @param    {Mixed}   fillStyle   This can be a string or function
+ *
+ * @return   {String}
+ */
+SineWaves.prototype.getFillStyle = function(_fillStyle, _fillBound) {
+  // console.log(this.height);
+  if (Utilities.isString(_fillStyle)) {
+    return _fillStyle;
+  } else if (Utilities.isFunction(_fillStyle)) {
+    return _fillStyle.call(this, this.el, _fillBound);
+  } 
+};
+
+/**
+ * Get yAxis of each wave from a number or function
+ *
+ * @param    {Mixed}   fillStyle   This can be a number or function
+ *
+ * @return   {number}
+ */
+SineWaves.prototype.getYAxis = function(_yAxis) {
+  if (Utilities.isNumber(_yAxis)) {
+    return _yAxis;
+  } else if (Utilities.isFunction(_yAxis)) {
+    return _yAxis.call(this, this.el);
+  } 
 };
 
 /**
@@ -246,14 +264,19 @@ SineWaves.prototype.update = function(time) {
  * @return {Object}          {x, y}
  */
 SineWaves.prototype.getPoint = function(time, position, options) {
-  var x = (time * this.options.speed) + (-this.yAxis + position) / options.wavelength;
+  // Get Custom yAxis - CJ 10/12
+  var _yAxis = this.getYAxis(options.yAxis);
+
+  // Customizable speed & acceleration - CJ 10/12
+  var _speed = this.options.speed * this.options.accerate;
+  var x = (time * _speed) + (-_yAxis + position) / options.wavelength;
   var y = options.waveFn.call(this, x, Waves);
 
   // Left and Right Sine Easing
   var amplitude = this.easeFn.call(this, position / this.waveWidth, options.amplitude);
 
   x = position + this.waveLeft;
-  y = amplitude * y + this.yAxis;
+  y = amplitude * y + _yAxis;
 
   return {
     x: x,
@@ -268,6 +291,37 @@ SineWaves.prototype.getPoint = function(time, position, options) {
  * @param  {Object} options wave options
  */
 SineWaves.prototype.drawWave = function(time, options) {
+
+  // Defaults for each line created
+  var defaultWave = {
+    timeModifier: 1,
+    amplitude: 50,
+    wavelength: 50,
+    segmentLength: 10,
+    lineWidth: 1,
+    strokeStyle: '',
+    fillStyle: '',
+    type: 'Sine',
+    fillInverse: false,
+    yAxis: this.yAxis
+  };
+
+  // Set Fill Bound - CJ 11/3
+  var fillBound = {
+    x0: 0,
+    x1: 0,
+    y0: this.height / 2,
+    y1: this.height
+  };
+  if(options.fillInverse) {
+    fillBound = {
+      x0: 0,
+      x1: 0,
+      y0: 0,
+      y1: this.height / 2
+    };
+  }
+
   // Setup defaults
   options = Utilities.defaults(defaultWave, options);
 
@@ -276,11 +330,23 @@ SineWaves.prototype.drawWave = function(time, options) {
   this.ctx.strokeStyle = options.strokeStyle;
   this.ctx.lineCap = 'butt';
   this.ctx.lineJoin = 'round';
+
+  // Set Stroke & Fill Stlye - CJ 10/12
+  if(options.strokeStyle !== '') {
+    this.ctx.strokeStyle = options.strokeStyle;
+  }
+  if(options.fillStyle !== '') {
+    this.ctx.fillStyle = this.getFillStyle(options.fillStyle, fillBound);
+  }
+  
+  // Get Custom yAxis - CJ 10/12
+  var _yAxis = this.getYAxis(options.yAxis);
+
   this.ctx.beginPath();
 
   // Starting Line
-  this.ctx.moveTo(0, this.yAxis);
-  this.ctx.lineTo(this.waveLeft, this.yAxis);
+  this.ctx.moveTo(0, _yAxis);
+  this.ctx.lineTo(this.waveLeft, _yAxis);
 
   var i;
   var point;
@@ -296,15 +362,36 @@ SineWaves.prototype.drawWave = function(time, options) {
     point = void 0;
   }
 
+  // Ending Line
+  this.ctx.lineTo(this.width, _yAxis);
+
+  // console.log(this.height);
+
+  // Fill Bottom Area - CJ 10/12
+  if(options.fillStyle !== '') {
+    if(!options.fillInverse) {
+      this.ctx.lineTo(this.width, this.height);
+      this.ctx.lineTo(0, this.height);
+    } else {
+      this.ctx.lineTo(this.width, 0);
+      this.ctx.lineTo(0, 0);
+      
+    }
+  }
+
+  // Stroke & Fill it - CJ 10/12
+  if(options.strokeStyle !== '') {
+    this.ctx.stroke();
+  }
+  if(options.fillStyle !== '') {
+    this.ctx.fill();
+  }
+
   // Clean  up
   i = void 0;
   options = void 0;
+  fillBound = void 0;
 
-  // Ending Line
-  this.ctx.lineTo(this.width, this.yAxis);
-
-  // Stroke it
-  this.ctx.stroke();
 };
 
 /**

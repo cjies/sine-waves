@@ -10,9 +10,18 @@ Generate multiple configurable sine waves using a `canvas` element
 
 ## Bower
 
+Original:
+
 ```shell
 bower install sine-waves --save
 ```
+
+CJ Modified:
+
+```shell
+bower install https://github.com/cjies/sine-waves.git --save
+```
+
 
 ## Basic Usage
 ```js
@@ -22,6 +31,9 @@ var waves = new SineWaves({
 
   // General speed of entire wave system
   speed: 8,
+  
+  // Acceleration
+  accerate: 1,
 
   // How many degress should we rotate all of the waves
   rotate: 0,
@@ -42,14 +54,28 @@ var waves = new SineWaves({
       wavelength: 200,   // How long is the wave
       segmentLength: 20, // How smooth should the line be
       strokeStyle: 'rgba(255, 255, 255, 0.5)', // Stroke color and opacity
-      type: 'sine'       // Wave type
+      fillStyle: 'rgba(255, 255, 255, 0.5)' || function, // Fill Color or gradient function(with Bound)
+      fillInverse: false, // Fill Direction(true is top -> center)
+      type: 'sine',       // Wave type
+      yAxis: this.height * 0.5 // Custom Y Axis 
     },
     {
       timeModifier: 1,
       lineWidth: 2,
       amplitude: 150,
       wavelength: 100,
-      strokeStyle: 'rgba(255, 255, 255, 0.3)'
+      strokeStyle: '',
+      fillInverse: false,
+      fillStyle: function(el, bound) {
+      	var gradient = this.ctx.createLinearGradient(bound.x0, bound.y0, bound.x1, bound.y1);
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
+        gradient.addColorStop(0.45, 'rgba(255, 255, 255, 0)');
+        return gradient;
+      },
+      yAxis: function() {
+        return this.height * 0.45;
+      }
+      
     }
   ],
 
@@ -128,7 +154,12 @@ You can also specify your own wave function by supplying a function to the type 
       amplitude: 150,
       wavelength: 200,
       segmentLength: 10,
+      yAxis: this.height * 0.5,
       strokeStyle: 'rgba(255, 255, 255, 0.5)',
+      fillInverse: false,
+      fillStyle: '' || function(el, bound) {
+      	// Maybe is gradient-style
+      }
       type: function(x, waves) {
         return Math.sin(x) * waves.sawtooth(x); // Combine two together
       }
@@ -143,6 +174,7 @@ You can also specify your own wave function by supplying a function to the type 
 * [Animated Borders](http://codepen.io/isuttell/pen/PwPqOw)
 * [Rotate](http://codepen.io/isuttell/pen/xbwrxB)
 * [Alternative Wave Types](http://codepen.io/isuttell/pen/MYaoKX)
+* [FillStyle Demo](http://codepen.io/)
 
 ## Mobile
 Canvas is supported on most devices however the due limited processing power complex animations may appear choppy. You can either create simplier animations for mobile or disable the animation by setting the `running` property to `false`. Running the `update()` method will update the animation one frame while paused.
@@ -164,10 +196,17 @@ waves.running = false;
 waves.update();
 ```
 
+## TODO
+
+* Touch Interaction
+* Acceleration Control
+
+
 ## License
 SineWaves is open-sourced software licensed under the MIT license
 
 ## Release History
+- v0.3.0-modified - added yAxis, fillStyle, fillInverse, and bug fixes (CJ 2015/11/03)
 - v0.3.0 - Refactor, added custom waves, and bug fixes
 - v0.2.0-alpha - Added rotate, ease, wavesWidth and wave types options
 - v0.1.0-alpha - Initial Release

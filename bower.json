@@ -1,7 +1,7 @@
 {
   "name": "sine-waves",
   "main": "sine-waves.js",
-  "version": "0.3.0",
+  "version": "0.3.0-modified",
   "homepage": "https://github.com/isuttell/sine-waves",
   "authors": [
     "Isaac Suttell <isaac@isaacsuttell.com>"
