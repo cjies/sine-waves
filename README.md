@@ -174,7 +174,7 @@ You can also specify your own wave function by supplying a function to the type 
 * [Animated Borders](http://codepen.io/isuttell/pen/PwPqOw)
 * [Rotate](http://codepen.io/isuttell/pen/xbwrxB)
 * [Alternative Wave Types](http://codepen.io/isuttell/pen/MYaoKX)
-* [FillStyle Demo](http://codepen.io/)
+* [Fill Gradient Demo](http://codepen.io/cjies/pen/JYBZdb)
 
 ## Mobile
 Canvas is supported on most devices however the due limited processing power complex animations may appear choppy. You can either create simplier animations for mobile or disable the animation by setting the `running` property to `false`. Running the `update()` method will update the animation one frame while paused.
@@ -206,7 +206,7 @@ waves.update();
 SineWaves is open-sourced software licensed under the MIT license
 
 ## Release History
-- v0.3.0-modified - added yAxis, fillStyle, fillInverse, and bug fixes (CJ 2015/11/03)
+- v0.3.0-modified - Added yAxis, fillStyle, fillInverse, and bug fixes (CJ 2015/11/03)
 - v0.3.0 - Refactor, added custom waves, and bug fixes
 - v0.2.0-alpha - Added rotate, ease, wavesWidth and wave types options
 - v0.1.0-alpha - Initial Release
